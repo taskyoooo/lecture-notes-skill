@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.DS_Store
+private/
+outputs/
+work/
+course-profile.local.yaml
+*.pdf
+*.docx
+*.heic
+*.HEIC

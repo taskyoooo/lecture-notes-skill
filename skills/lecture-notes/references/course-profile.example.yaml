@@ -1,0 +1,19 @@
+# u590du5236u5230u4ed3u5e93u5916u4f5cu4e3au79c1u6709u914du7f6euff1bu4ec5u586bu5199u7528u6237u5b9eu9645u63d0u4f9bu7684u4fe1u606fu3002
+course_name: u5f85u63d0u4f9b
+teacher_name: u5f85u63d0u4f9b
+lecture_number: null
+lecture_date: null
+previous_final_version: null
+style:
+  conclusion_first: true
+  heading_levels: ["u4e00u3001", "uff08u4e00uff09", "1."]
+  paper: A4
+  title_font: u9ed1u4f53
+  body_font: u5b8bu4f53
+  color: black
+  first_line_indent_chars: 2
+  footer: current/total
+outputs: [markdown, html, pdf, mindmap, private_audit]
+visibility: private
+teacher_confirmation: pending
+lecture_specific_changes: []
