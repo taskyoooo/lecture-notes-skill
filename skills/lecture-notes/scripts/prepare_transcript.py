@@ -7,17 +7,17 @@ import re
 from pathlib import Path
 
 TIMESTAMP = re.compile(r'(?<!\d)(\d{1,2}:\d{2}:\d{2})(?!\d)')
-DISPOSITIONS = {'u6b63u6587', 'u5408u5e76', 'u91cdu590du7701u7565', 'u975eu8bfeu7a0bu4ea4u6d41', 'u5f85u6838u5b9e'}
+DISPOSITIONS = {'正文', '合并', '重复省略', '非课程交流', '待核实'}
 
 
 def prepare(source, out):
     source = Path(source)
     if source.suffix.lower() not in {'.md', '.txt'}:
-        raise ValueError('u53eau63a5u53d7UTF-8 Markdownu6216TXTuff1bPDFu548cWordu8bf7u5148u53efu9760u63d0u53d6u3002')
+        raise ValueError('只接受UTF-8 Markdown或TXT；PDF和Word请先可靠提取。')
     data = source.read_bytes()
     content = data.decode('utf-8-sig')
     if not content.strip():
-        raise ValueError('u6765u6e90u4e3au7a7au3002')
+        raise ValueError('来源为空。')
     lines = content.splitlines()
     starts = [i for i, line in enumerate(lines, 1) if TIMESTAMP.search(line)]
     # Include every source line, including the preamble.
@@ -34,11 +34,11 @@ def prepare(source, out):
     out.mkdir(parents=True, exist_ok=True)
     target = out / 'coverage.json'
     if target.exists():
-        raise ValueError('coverage.jsonu5df2u5b58u5728uff1bu8bf7u4fddu7559u539fu8bb0u5f55u6216u9009u62e9u65b0u7684u5de5u4f5cu76eeu5f55u3002')
+        raise ValueError('coverage.json已存在；请保留原记录或选择新的工作目录。')
     manifest = {'source_name': source.name, 'sha256': hashlib.sha256(data).hexdigest(),
                 'line_count': len(lines), 'segments': segments}
     target.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(f'u5df2u751fu6210 {target}uff0cu5171{len(segments)}u4e2au533au95f4uff1bu672au4e0au4f20u6765u6e90u3002')
+    print(f'已生成 {target}，共{len(segments)}个区间；未上传来源。')
 
 
 def check(path):
@@ -47,19 +47,19 @@ def check(path):
     problems = []
     for segment in data['segments']:
         if segment['start_line'] != cursor or segment['end_line'] < cursor:
-            raise ValueError('u533au95f4u4e0du8fdeu7eedu3001u91cdu53e0u6216u987au5e8fu9519u8befu3002')
+            raise ValueError('区间不连续、重叠或顺序错误。')
         cursor = segment['end_line'] + 1
         if segment['disposition'] not in DISPOSITIONS:
-            problems.append(segment['id'] + 'uff1au5c1au672au586bu5199u6709u6548u5904u7406u65b9u5f0f')
-        elif segment['disposition'] in {'u6b63u6587', 'u5408u5e76'} and not segment['destination'].strip():
-            problems.append(segment['id'] + 'uff1au7f3au5c11u6b63u6587u5bf9u5e94u4f4du7f6e')
-        elif segment['disposition'] in {'u91cdu590du7701u7565', 'u975eu8bfeu7a0bu4ea4u6d41', 'u5f85u6838u5b9e'} and not segment['reason'].strip():
-            problems.append(segment['id'] + 'uff1au7f3au5c11u5904u7406u8bf4u660e')
+            problems.append(segment['id'] + '：尚未填写有效处理方式')
+        elif segment['disposition'] in {'正文', '合并'} and not segment['destination'].strip():
+            problems.append(segment['id'] + '：缺少正文对应位置')
+        elif segment['disposition'] in {'重复省略', '非课程交流', '待核实'} and not segment['reason'].strip():
+            problems.append(segment['id'] + '：缺少处理说明')
     if cursor != data['line_count'] + 1:
-        raise ValueError('u533au95f4u6ca1u6709u8986u76d6u539fu6587u5168u90e8u884cu3002')
+        raise ValueError('区间没有覆盖原文全部行。')
     if problems:
         raise ValueError('\n'.join(problems))
-    print('u539fu6587u884cu53f7u8fdeu7eedu8986u76d6uff0cu5904u7406u8bb0u5f55u5b8cu6574uff1bu5185u5bb9u51c6u786eu6027u4ecdu9700u5bf9u7167u539fu6587u5ba1u9605u3002')
+    print('原文行号连续覆盖，处理记录完整；内容准确性仍需对照原文审阅。')
 
 
 if __name__ == '__main__':
@@ -71,11 +71,11 @@ if __name__ == '__main__':
     try:
         if args.check:
             if args.source or args.out:
-                parser.error('--checku4e0du80fdu4e0eu6765u6e90u6216--outu540cu65f6u4f7fu7528u3002')
+                parser.error('--check不能与来源或--out同时使用。')
             check(args.check)
         else:
             if args.source is None or args.out is None:
-                parser.error('u9700u63d0u4f9bu6765u6e90u4e0e--outuff0cu6216u5355u72ecu4f7fu7528--checku3002')
+                parser.error('需提供来源与--out，或单独使用--check。')
             prepare(args.source, args.out)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         parser.exit(1, str(exc) + '\n')
