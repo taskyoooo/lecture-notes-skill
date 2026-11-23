@@ -8,8 +8,10 @@ style:
   conclusion_first: true
   heading_levels: ["一、", "（一）", "1."]
   paper: A4
-  title_font: 黑体
-  body_font: 宋体
+  title_font: 小标宋
+  level_1_font: 黑体
+  level_2_font: 楷体
+  body_font: 仿宋
   color: black
   first_line_indent_chars: 2
   footer: current/total
